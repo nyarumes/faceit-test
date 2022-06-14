@@ -1,2 +1,2 @@
-cmd/user/user
+cmd/user/service
 *.db
