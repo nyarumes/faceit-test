@@ -23,7 +23,7 @@ type RPCHandler struct {
 	handler UniqueHandler
 }
 
-func (r *RPCHandler) FindAllWithPaginationAndFilter(args *RPCFindArgs, reply []Model) error {
+func (r *RPCHandler) FindAllWithPaginationAndFilter(args *RPCFindArgs, reply *[]Model) error {
 	users, err := r.handler.FindAllWithPaginationAndFilter(args.Offset, args.Count, map[string]string{
 		FilterUserNickname: args.Nickname,
 	})
@@ -32,7 +32,7 @@ func (r *RPCHandler) FindAllWithPaginationAndFilter(args *RPCFindArgs, reply []M
 		return err
 	}
 
-	reply = append(reply, users...)
+	*reply = append(*reply, users...)
 	_ = reply
 
 	return nil

@@ -48,7 +48,9 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return user.HttpServer(defaultHTTPPort, userHandler)
+		r := user.HttpRouter(userHandler)
+
+		return http.ListenAndServe(defaultHTTPPort, r)
 	})
 
 	g.Go(func() error {

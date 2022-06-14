@@ -6,11 +6,8 @@ Run it locally (with golang on machine):
 Run it dockerized:
 - docker run ...
 
-Run unit tests:
+Run tests:
 - make tests
-
-Run integration tests (end-to-end):
-- make tests/integration
 
 Run test coverage:
 - make tests/coverage

@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// HttpServer declares http server
-func HttpServer(port string, handler UniqueHandler) error {
+// HttpRouter declares http routes
+func HttpRouter(handler UniqueHandler) *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +20,14 @@ func HttpServer(port string, handler UniqueHandler) error {
 			count    = r.URL.Query().Get("count")
 			nickname = r.URL.Query().Get("nickname")
 		)
+
+		if len(offset) == 0 {
+			offset = "0"
+		}
+
+		if len(count) == 0 {
+			count = "10"
+		}
 
 		offsetParse, err := strconv.Atoi(offset)
 		if err != nil {
@@ -127,10 +135,5 @@ func HttpServer(port string, handler UniqueHandler) error {
 
 	log.Debug().Msg("User http server is starting")
 
-	err := http.ListenAndServe(port, r)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r
 }
