@@ -12,6 +12,11 @@ Run tests:
 Run test coverage:
 - make tests/coverage
 
+Thoughts about my choices:
+- gorilla mux is best choice to be close to std library and be sure we have fully tested http in production
+- bolt nice way to start and test our business logic if we wanna test the service locally without cluster options but suppose in view of structure to expand it to other databases
+- std rpc is easy way to expose the service in rpc world without supporting another schema (in case if we suppose gRPC as alternative)
+
 Let's think about improves:
 - It can expand user domain to subfolders that represents entities as separated packages to get clear view on each entity (handlers, repositores, models) like example: "user can have roles"
 - Main can isolate RPC and HTTP init handlers to domains itself to avoid connect on one entity
