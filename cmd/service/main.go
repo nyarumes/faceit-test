@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
-	"net"
 	"net/http"
-	"net/rpc"
 	"time"
 
 	"github.com/Nyarum/faceit-test/cmd/service/user"
+	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -15,9 +14,10 @@ import (
 )
 
 const (
-	defaultDBName   = "service.db"
-	defaultRPCPort  = ":8082"
-	defaultHTTPPort = ":8083"
+	defaultDBName          = "service.db"
+	defaultRPCPort         = ":8082"
+	defaultHTTPPort        = ":8083"
+	defaultHealthCheckPort = ":80"
 )
 
 func main() {
@@ -25,7 +25,13 @@ func main() {
 
 	log.Debug().Msg("Starting service...")
 
-	userRepository, err := user.NewRepository()
+	db, err := bolt.Open(defaultDBName, 0600, nil)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't init bolt database")
+	}
+	defer db.Close()
+
+	userRepository, err := user.NewRepository(db)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't init user repository")
 	}
@@ -38,15 +44,15 @@ func main() {
 	g, _ := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return rpcServer(defaultRPCPort, userHandler)
+		return user.RpcServer(defaultRPCPort, userHandler)
 	})
 
 	g.Go(func() error {
-		return httpServer(defaultHTTPPort, userHandler)
+		return user.HttpServer(defaultHTTPPort, userHandler)
 	})
 
 	g.Go(func() error {
-		return healthCheck(":80")
+		return httpHealthCheckServer(defaultHealthCheckPort)
 	})
 
 	err = g.Wait()
@@ -55,45 +61,16 @@ func main() {
 	}
 }
 
-// rpcServer delcares RPC server
-func rpcServer(port string, handler *user.Handler) error {
-	err := rpc.Register(handler)
-	if err != nil {
-		return err
-	}
-
-	rpc.HandleHTTP()
-
-	listener, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		return err
-	}
-
-	err = http.Serve(listener, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// httpServer declares http server
-func httpServer(port string, handler *user.Handler) error {
+// httpHealthCheckServer declares http server for health checker
+func httpHealthCheckServer(port string) error {
 	r := mux.NewRouter()
-	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		handler.FindAllWithPaginationAndFilter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	}).Methods("GET")
-	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		handler.Add()
-	}).Methods("POST")
-	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		handler.Update()
-	}).Methods("PUT")
-	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		handler.Remove()
-	}).Methods("DELETE")
 
-	err := http.ListenAndServe(":"+port, r)
+	log.Debug().Msg("Health check is starting")
+
+	err := http.ListenAndServe(port, r)
 	if err != nil {
 		return err
 	}

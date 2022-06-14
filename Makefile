@@ -1,7 +1,16 @@
-USER_SERVICE=user
+SERVICE_NAME=service
 
 run: build
-	cd cmd/${USER_SERVICE}; ./${USER_SERVICE}
+	cd cmd/${SERVICE_NAME}; ./${SERVICE_NAME}
 
 build:
-	cd cmd/${USER_SERVICE}; go build -o ${USER_SERVICE} main.go
+	cd cmd/${SERVICE_NAME}; go build -o ${SERVICE_NAME} main.go
+
+tests:
+	go test ./...
+
+tests/integration:
+
+
+tests/coverage:
+	go test -cover ./...

@@ -19,6 +19,13 @@ type UniqueRepository interface {
 	FindPaginatedWithFilter(offset int, count int, filters ...userFilter) (users []Model, err error)
 }
 
+type UniqueHandler interface {
+	Add(firstName, lastName, nickName, password, email, country string) error
+	Update(id uuid.UUID, firstName, lastName, nickName, country string) error
+	Remove(id uuid.UUID) error
+	FindAllWithPaginationAndFilter(offset, count int, filters map[string]string) ([]Model, error)
+}
+
 // Handler represents user handler
 type Handler struct {
 	repository UniqueRepository
@@ -32,7 +39,7 @@ func NewHandler(repository UniqueRepository) *Handler {
 }
 
 // Add adds a new user to storage
-func (h Handler) Add(firstName, lastName, nickName, password, email, country string) error {
+func (h *Handler) Add(firstName, lastName, nickName, password, email, country string) error {
 	id := uuid.New()
 
 	return h.repository.Insert(Model{

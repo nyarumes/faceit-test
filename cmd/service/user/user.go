@@ -21,6 +21,7 @@ import (
 	}
 */
 
+// Model represents database model
 type Model struct {
 	ID        uuid.UUID
 	FirstName string
@@ -31,4 +32,15 @@ type Model struct {
 	Country   string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+// Request represents http payload
+type Request struct {
+	ID        string `json:"-"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Nickname  string `json:"nickname"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	Country   string `json:"country"`
 }

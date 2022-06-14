@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	defaultDBName         = "service.db"
 	defaultUserBucketName = "users"
 )
 
@@ -23,16 +22,16 @@ type Repository struct {
 	storage *bolt.DB
 }
 
-func NewRepository() (*Repository, error) {
-	db, err := bolt.Open(defaultDBName, 0600, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
+func NewRepository(db *bolt.DB) (*Repository, error) {
+	err := db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(defaultUserBucketName))
+
+		return err
+	})
 
 	return &Repository{
 		storage: db,
-	}, nil
+	}, err
 }
 
 func (r Repository) Insert(user Model) error {
@@ -78,6 +77,21 @@ func (r Repository) Update(updatedUser Model) error {
 	})
 }
 
+func (r Repository) Get(id uuid.UUID) (user Model, err error) {
+	err = r.storage.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(defaultUserBucketName))
+
+		data := b.Get([]byte(id.String()))
+		if len(data) == 0 {
+			return ErrUserNotFound
+		}
+
+		return json.Unmarshal(data, &user)
+	})
+
+	return
+}
+
 func (r Repository) Delete(id uuid.UUID) error {
 	return r.storage.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(defaultUserBucketName))
@@ -99,8 +113,19 @@ func (r Repository) FindPaginatedWithFilter(offset int, count int, filters ...us
 		b := tx.Bucket([]byte(defaultUserBucketName))
 
 		c := b.Cursor()
+		i := 0
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
+			i++
+
+			if offset > i {
+				continue
+			}
+
+			if i > count {
+				break
+			}
+
 			var user Model
 
 			err := json.Unmarshal(v, &user)
