@@ -11,7 +11,7 @@ const (
 	FilterUserNickname = "nickname"
 )
 
-// UniqueRepository represents
+// UniqueRepository represents any storage fit user capabilities
 type UniqueRepository interface {
 	Insert(user Model) error
 	Update(user Model) error

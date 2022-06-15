@@ -22,6 +22,7 @@ type Repository struct {
 	storage *bolt.DB
 }
 
+// NewRepository inits repository based bolt db
 func NewRepository(db *bolt.DB) (*Repository, error) {
 	err := db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(defaultUserBucketName))
@@ -34,6 +35,7 @@ func NewRepository(db *bolt.DB) (*Repository, error) {
 	}, err
 }
 
+// Insert adds a new record with user
 func (r Repository) Insert(user Model) error {
 	return r.storage.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(defaultUserBucketName))
@@ -47,6 +49,7 @@ func (r Repository) Insert(user Model) error {
 	})
 }
 
+// Update updates existing user
 func (r Repository) Update(updatedUser Model) error {
 	return r.storage.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(defaultUserBucketName))
@@ -77,6 +80,7 @@ func (r Repository) Update(updatedUser Model) error {
 	})
 }
 
+// Get gets a user by id
 func (r Repository) Get(id uuid.UUID) (user Model, err error) {
 	err = r.storage.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(defaultUserBucketName))
@@ -108,6 +112,7 @@ func WithUserNickNameFilter(nickname string) userFilter {
 	}
 }
 
+// FindPaginatedWithFilter finds scope of users with pagination and filters for fields
 func (r Repository) FindPaginatedWithFilter(offset int, count int, filters ...userFilter) (users []Model, err error) {
 	err = r.storage.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(defaultUserBucketName))

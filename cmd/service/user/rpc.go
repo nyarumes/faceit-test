@@ -9,16 +9,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// RPCFindArgs represents args for find request
 type RPCFindArgs struct {
 	Offset   int
 	Count    int
 	Nickname string
 }
 
+// RPCRemoveArgs represents args for remove request
 type RPCRemoveArgs struct {
 	ID string
 }
 
+// RPCHandler represents a cover of rpc purposes for handler
 type RPCHandler struct {
 	handler UniqueHandler
 }
